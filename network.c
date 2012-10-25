@@ -39,7 +39,7 @@ int main()
 	hex_viewer((unsigned char *)uc_data, 10);
 
         /* MAC Address를 출력한다. */
-        st_Ether = (struc ether_header *)uc_data;
+        st_Ether = (struct ether_header *)uc_data;
 	printf("MAC [%02X:%02X:%02X:%02X:%02X:%02X]" 
 			" <- [%02X:%02X:%02X:%02X:%02X:%02X] \n", 
                st_Ether -> ether_dhost[0], /* 목적지 MAC Address */
@@ -56,20 +56,30 @@ int main()
                st_Ether -> ether_shost[5]
             );
         
-        /* IP 주소를 출력한다. */
-        if(0x45 == *(uc_data + 14)) /* 패킷을 받았을 때만 출력한다. */
+        switch(ntohs(st_Ether -> ether_type))
         {
-            printf("IP  [%d.%d.%d.%d] <- [%d.%d.%d.%d]\n", 
-                   *(uc_data + 26),
-                   *(uc_data + 27),
-                   *(uc_data + 28),
-                   *(uc_data + 29),
-                   *(uc_data + 30),
-                   *(uc_data + 31),
-                   *(uc_data + 32),
-                   *(uc_data + 34));
+        case ETHERTYPE_PUP:
+            printf("Xerox PUP\n");
+            break;
+            
+        case ETHERTYPE_IP:
+            printf("IP\n");
+            break;
+            
+        case ETHERTYPE_ARP:
+            printf("Address resolution\n");
+            break;
+            
+        case ETHERTYPE_REVARP:
+            printf("Reverse ARP\n");
+            break;
+            
+        default:
+            printf("Unknown Type\n");
+            /* 패킷의 종류를 출력 */
+            /* printf("%04X\n", ntohs(st_Ether -> ether_type)); /\* 호스트 형태로 바꾸겠다. *\/ */
         }
-        
+                
 	pcap_close(nicdev);		
 	return 0;
 }
