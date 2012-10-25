@@ -14,21 +14,21 @@ int hex_viewer(unsigned char *address, int line)
     int i_loop;
     int i_cnt;
 
-    unsigned char *c_num_ptr = (unsigned char *)address;
+    unsigned int ui_offset = 0;
 
     // 가이드 문구 시작.
     printf("--------------------------------------------------------------------------------\n"
-           " Address ");
+           "  Offset ");
 
     // 주소 마지막 바이트 출력 시작 : 불러들인 주소의 마지막 한 바이트를 알아보기 쉽게 띄워준다.
     printf("  ");               /* 공백을 맞추기 위함. */
     for(i_cnt = 0;i_cnt <= 15;++i_cnt)
     {
-        printf("%02X ", ((unsigned char)((char)c_num_ptr & 0x0f) + i_cnt)); /* 해당 주소를 쉽게 찾을 수 있게 변경. */
+        printf("%02X ", ui_offset + i_cnt); /* 해당 주소를 쉽게 찾을 수 있게 변경. */
     }
     // 주소 마지막 바이트 출력 끝.
     
-    i_loop = (unsigned char)c_num_ptr & 0xf; /* ASCII CODE의 가이드 문자는 첫 번째 번지의 주소를 참조하여 차례로 출력. */
+    i_loop = ui_offset & 0xf; /* ASCII CODE의 가이드 문자는 첫 번째 번지의 주소를 참조하여 차례로 출력. */
     for(i_cnt = 0; i_cnt <= 15; ++i_cnt)
     {
         if(15 < i_loop)
@@ -43,7 +43,7 @@ int hex_viewer(unsigned char *address, int line)
     // 몸체 시작. : 주소와 해당 주소의 실제값을 1 바이트 단위로 출력, 아스키 코드 표시.
     for(i_loop = 0; i_loop <= line; ++i_loop) // 몇 줄의 주소를 띄울 것인가를 i_loop의 비교값으로 결정.
     {
-        printf("0x%08X ", c_num_ptr); // 주소 출력
+        printf("0x%08X ", ui_offset); // 주소 출력
 
         // 1바이트씩 주소 값을 출력 시작. :
         i_cnt = 0;
@@ -75,7 +75,7 @@ int hex_viewer(unsigned char *address, int line)
         printf("\n"); // 한줄이 끝나고 개행(줄바꿈)
         
         address = address + 16; // 다음 줄의 올바른 주소값은 위에서 16바이트를 출력했으니 다음줄은 기준이 되고 있는 첫바이트> 보다 16이 많다.
-        c_num_ptr = c_num_ptr + 16; // 다음 줄의 올바른 주소값은 위에서 16바이트를 출력했으니 다음줄은 기준이 되고 있는 첫바이트> 보다 16이 많다.
+        ui_offset = ui_offset + 16; // 다음 줄의 올바른 주소값은 위에서 16바이트를 출력했으니 다음줄은 기준이 되고 있는 첫바이트> 보다 16이 많다.
     }
     putchar('\n');
 
