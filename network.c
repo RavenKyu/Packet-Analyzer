@@ -50,7 +50,21 @@ int main()
                *(uc_data + 9),
                *(uc_data + 10),
                *(uc_data + 11));
-
+        
+        /* IP 주소를 출력한다. */
+        if(0x45 == *(uc_data + 14)) /* 패킷을 받았을 때만 출력한다. */
+        {
+            printf("IP  [%d.%d.%d.%d] <- [%d.%d.%d.%d]\n", 
+                   *(uc_data + 26),
+                   *(uc_data + 27),
+                   *(uc_data + 28),
+                   *(uc_data + 29),
+                   *(uc_data + 30),
+                   *(uc_data + 31),
+                   *(uc_data + 32),
+                   *(uc_data + 34));
+        }
+        
 	pcap_close(nicdev);		
 	return 0;
 }
