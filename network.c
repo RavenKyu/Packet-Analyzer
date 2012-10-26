@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <pcap/pcap.h>          /* man page에서 가리키는 위치가 잘못 적혀 있을 수도 있다. */
 #include <net/ethernet.h>       /* 패킷의 구조체를 명시 해 두었다. */
+#include <netinet/ip.h>
 
 #include "hex_viewer.h"
 
@@ -16,6 +17,7 @@ int main()
 
     struct pcap_pkthdr info;
     struct ether_header *st_Ether;
+    struct ip *st_ip;
 
     nic_name = pcap_lookupdev(errbuf); /* 장치명을 가져온다. */
     if(nic_name == NULL)                
@@ -129,7 +131,13 @@ int main()
         /* 패킷의 종류를 출력 */
         /* printf("%04X\n", ntohs(st_Ether -> ether_type)); /\* 호스트 형태로 바꾸겠다. *\/ */
     }
-                
+
+    /* Print IP Version */
+    st_ip = (struct ip *)(st_Ether + 1);
+
+    printf("Version : %d\n", st_ip -> ip_v);
+    printf("Header length : %d byte\n", (st_ip -> ip_hl) * 4);
+    
     pcap_close(nicdev);		
     return 0;
 }
