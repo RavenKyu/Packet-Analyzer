@@ -3,7 +3,7 @@ OBJECTS = network.o \
 	hex_viewer.o 
 
 all: BEGIN $(OBJECTS)
-	@$(CC) -lpcap -o network $(OBJECTS)
+	@$(CC) -o network $(OBJECTS) -lpcap
 	@echo Compilation is done.
 
 BEGIN:
