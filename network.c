@@ -27,6 +27,7 @@ int main()
     }
 
     nicdev = pcap_open_live(nic_name, 1400, 1, 0, errbuf); /* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*/
+    /* nicdev = pcap_open_live("eth1", 1400, 1, 0, errbuf); /\* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*\/ */
     if(nicdev == NULL)                                     /* 장치 열기를 실패했을 경우 error 메세지를 출력 후 종료 */
     {
         printf("The device open error :: %s \n", errbuf);
@@ -135,9 +136,15 @@ int main()
     /* Print IP Version */
     st_ip = (struct ip *)(st_Ether + 1);
 
+    /* 주의
+     2바이트 이상의 출력물은 모두 ntohs() 함수를 이용해야 한다.
+     네트워크 상의 값들은 모두 빅 엔디안 상태에 있다.*/
+    
     printf("Version : %d\n", st_ip -> ip_v);
     printf("Header length : %d byte\n", (st_ip -> ip_hl) * 4);
-    
+
+    printf("Reserved bit : %s\n", nwtohs(stIP -> ipoff) & IP_RF)
+           
     pcap_close(nicdev);		
     return 0;
 }
