@@ -136,15 +136,32 @@ int main()
     /* Print IP Version */
     st_ip = (struct ip *)(st_Ether + 1);
 
-    /* 주의
-     2바이트 이상의 출력물은 모두 ntohs() 함수를 이용해야 한다.
-     네트워크 상의 값들은 모두 빅 엔디안 상태에 있다.*/
-    
+    /* 주의해야 할 점.
+     * 2바이트 이상의 출력물은 모두 ntohs() 함수를 이용해야 한다.
+     * 네트워크 상의 값들은 모두 빅 엔디안 상태에 있다.*/
+
+    /* IP Header 출력 */
     printf("Version : %d\n", st_ip -> ip_v);
     printf("Header length : %d byte\n", (st_ip -> ip_hl) * 4);
+    printf("Type of service : %02X\n", st_ip -> ip_tos);
+    printf("Total length : %d\n", ntohs(st_ip -> ip_len));
+    printf("Identification : %d(%04X)\n", ntohs(st_ip -> ip_id), ntohs(st_ip -> ip_id));
 
-    printf("Reserved bit : %s\n", nwtohs(stIP -> ipoff) & IP_RF)
-           
+    printf("Flagment offset filed : %d\n", (ntohs(st_ip -> ip_off) & IP_OFFMASK));
+    printf("Reserved bit : %s\n", ((ntohs(st_ip -> ip_off) & IP_RF) == IP_RF) ? "Set" : "Not set");
+    printf("Don't fragment bit : %s\n", ((ntohs(st_ip -> ip_off) & IP_DF) == IP_DF) ? "Set" : "Not set");
+    printf("More fragment bit : %s\n", ((ntohs(st_ip -> ip_off) & IP_MF) == IP_MF) ? "Set" : "Not set");
+
+    printf("Time to live : %d\n", st_ip -> ip_ttl);
+    printf("Protocol : %d\n", st_ip -> ip_p);
+    printf("Checksum : %04X\n", ntohs(st_ip -> ip_sum));
+
+    /* IP 출력시 주의해야 할 점.
+     * IP를 출력시 버퍼가 중복되기 때문에
+     * 두번에 걸쳐서 출력을 해 주어야 한다. */
+    printf("IP [%s] -> ", inet_ntoa(st_ip -> ip_src));
+    printf("[%s]\n", inet_ntoa(st_ip -> ip_dst));
+    
     pcap_close(nicdev);		
     return 0;
 }
