@@ -153,7 +153,126 @@ int main()
     printf("More fragment bit : %s\n", ((ntohs(st_ip -> ip_off) & IP_MF) == IP_MF) ? "Set" : "Not set");
 
     printf("Time to live : %d\n", st_ip -> ip_ttl);
-    printf("Protocol : %d\n", st_ip -> ip_p);
+    printf("Protocol : ");
+    switch(st_ip -> ip_p)
+    {
+    case IPPROTO_IP:
+        printf("Dummy protocol for TCP.n");
+        break;
+
+    case IPPROTO_ICMP :
+	printf("Internet Control Message Protocol.\n");
+	break;
+    
+    case IPPROTO_IGMP :
+	printf("Internet Group Management Protocol\n");
+	break;
+    
+    case IPPROTO_IPIP :
+	printf("IPIP tunnels (older KA9Q tunnels use 94).\n");
+	break;
+    
+    case IPPROTO_TCP :
+	printf("Transmission Control Protocol.\n");
+	break;
+    
+    case IPPROTO_EGP :
+	printf("Exterior Gateway Protocol.\n");
+	break;
+    
+    case IPPROTO_PUP :
+	printf(" PUP protocol.\n");
+	break;
+    
+    case IPPROTO_UDP :
+	printf(" User Datagram Protocol.\n");
+	break;
+    
+    case IPPROTO_IDP :
+	printf("XNS IDP protocol.\n");
+	break;
+    
+    case IPPROTO_TP :
+	printf("SO Transport Protocol Class 4.\n");
+	break;
+    
+    case IPPROTO_DCCP :
+	printf("Datagram Congestion Control Protocol.\n");
+	break;
+    
+    case IPPROTO_IPV6 :
+	printf("IPv6 header.\n");
+	break;
+    
+    case IPPROTO_ROUTING :
+	printf("Pv6 routing header.\n");
+	break;
+    
+    case IPPROTO_FRAGMENT :
+	printf("v6 fragmentation header.\n");
+	break;
+    
+    case IPPROTO_RSVP :
+	printf("Reservation Protocol.\n");
+	break;
+    
+    case IPPROTO_GRE :
+	printf("General Routing Encapsulation.\n");
+	break;
+    
+    case IPPROTO_ESP :
+	printf("encapsulating security payload.\n");
+	break;
+    
+    case IPPROTO_AH :
+	printf("authentication header.\n");
+	break;
+    
+    case IPPROTO_ICMPV6 :
+	printf("ICMPv6.\n");
+	break;
+    
+    case IPPROTO_NONE :
+	printf("IPv6 no next header.\n");
+	break;
+    
+    case IPPROTO_DSTOPTS :
+	printf("Pv6 destination options.\n");
+	break;
+    
+    case IPPROTO_MTP :
+	printf("Multicast Transport Protocol.\n");
+	break;
+    
+    case IPPROTO_ENCAP :
+	printf("Encapsulation Header.\n");
+	break;
+    
+    case IPPROTO_PIM :
+	printf("Protocol Independent Multicast.\n");
+	break;
+    
+    case IPPROTO_COMP :
+	printf("Compression Header Protocol.\n");
+	break;
+    
+    case IPPROTO_SCTP :
+	printf("Stream Control Transmission Protocol.\n");
+	break;
+    
+    case IPPROTO_UDPLITE :
+	printf("DP-Lite protocol.\n");
+	break;
+    
+    case IPPROTO_RAW :
+	printf("Raw IP packets.\n");
+	break;
+    
+    default:
+        printf(" \n");
+        break;
+    }
+    
     printf("Checksum : %04X\n", ntohs(st_ip -> ip_sum));
 
     /* IP 출력시 주의해야 할 점.
