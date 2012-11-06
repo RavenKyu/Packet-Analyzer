@@ -3,6 +3,7 @@
 #include <net/ethernet.h>       /* 패킷의 구조체를 명시 해 두었다. */
 #include <netinet/ip.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 #include "hex_viewer.h"
 
@@ -11,6 +12,7 @@ char errbuf[PCAP_ERRBUF_SIZE];
 pcap_t *emb_open(void);                 /* 장치를 열고 셋팅하는 함수 */
 int emb_data_link(int, const unsigned char **);
 int emb_ip_header(const unsigned char **);
+int emb_tcp_header(const unsigned char **);
 
 int main()
 {
@@ -21,9 +23,10 @@ int main()
     nicdev = emb_open();        /* 장치를 연다 */
     uc_data = pcap_next(nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
     hex_viewer((unsigned char *)uc_data, 10); /* 헥사뷰로 출력 */
-    emb_data_link(pcap_datalink(nicdev), &uc_data); /* 이더넷 헤더 정보를 가져온다. */
+    emb_data_link(pcap_datalink(nicdev), &uc_data); /*헤더 정보를 가져온다. */
     emb_ip_header(&uc_data);
-    
+
+    emb_tcp_header(&uc_data);    
     pcap_close(nicdev);
     
     return 0;    
@@ -241,5 +244,19 @@ int emb_ip_header(const unsigned char **data)
     printf("IP [%s] -> ", inet_ntoa(st_ip -> ip_src));
     printf("[%s]\n", inet_ntoa(st_ip -> ip_dst));
 
+    return 0;
+}
+
+int emb_tcp_header(const unsigned char **tcp_info)
+{
+    struct tcphdr *tcp_header;
+
+    tcp_header = (struct tcphdr *)(*tcp_info + 34);
+
+    printf("Source Port : %d\n", ntohs(tcp_header -> source));
+    printf("Destination Port : %d\n", ntohs(tcp_header -> dest));
+    printf("Seq : %d\n", ntohs(tcp_header -> seq));
+    printf("Ack : %d\n", ntohs(tcp_header -> ack_seq));
+    
     return 0;
 }
