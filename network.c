@@ -2,32 +2,48 @@
 #include <pcap/pcap.h>          /* man page에서 가리키는 위치가 잘못 적혀 있을 수도 있다. */
 #include <net/ethernet.h>       /* 패킷의 구조체를 명시 해 두었다. */
 #include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #include "hex_viewer.h"
 
 char errbuf[PCAP_ERRBUF_SIZE];
 
+pcap_t *emb_open(void);                 /* 장치를 열고 셋팅하는 함수 */
+int emb_data_link(int, const unsigned char **);
+int emb_ip_header(const unsigned char **);
+
 int main()
+{
+    pcap_t *nicdev;         /* 장치 변수 */
+    const unsigned char *uc_data;
+    struct pcap_pkthdr info;
+
+    nicdev = emb_open();        /* 장치를 연다 */
+    uc_data = pcap_next(nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
+    hex_viewer((unsigned char *)uc_data, 10); /* 헥사뷰로 출력 */
+    emb_data_link(pcap_datalink(nicdev), &uc_data); /* 이더넷 헤더 정보를 가져온다. */
+    emb_ip_header(&uc_data);
+    
+    pcap_close(nicdev);
+    
+    return 0;    
+}
+
+pcap_t *emb_open(void)                 /* 장치를 열고 셋팅하는 함수 */
 {
     char *nic_name;
     pcap_t *nicdev;         /* 장치 변수 */
-
-    //unsigned char *buff[1400] = {0, }; 
-    const unsigned char *uc_data;
-
-    struct pcap_pkthdr info;
-    struct ether_header *st_Ether;
-    struct ip *st_ip;
-
+    
     nic_name = pcap_lookupdev(errbuf); /* 장치명을 가져온다. */
-    if(nic_name == NULL)                
-    {
-        printf("Device Error\n");
-        return 0;
-    }
+    
+    /* if(nic_name == NULL)                 */
+    /* { */
+    /*     printf("Device Error\n"); */
+    /*     return 0; */
+    /* } */
 
-    nicdev = pcap_open_live(nic_name, 1400, 1, 0, errbuf); /* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*/
-    /* nicdev = pcap_open_live("eth1", 1400, 1, 0, errbuf); /\* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*\/ */
+    /* nicdev = pcap_open_live(nic_name, 1400, 1, 0, errbuf); /\* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*\/ */
+    nicdev = pcap_open_live("eth1", 1400, 1, 0, errbuf); /* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*/
     if(nicdev == NULL)                                     /* 장치 열기를 실패했을 경우 error 메세지를 출력 후 종료 */
     {
         printf("The device open error :: %s \n", errbuf);
@@ -36,20 +52,25 @@ int main()
     }
 
     printf("%s\n", nic_name);
+    
+    return nicdev;
+}
 
-    uc_data = pcap_next(nicdev, &info);
-
-    hex_viewer((unsigned char *)uc_data, 10);
-
+int emb_data_link(int i_type, const unsigned char **data)
+{
+    struct ether_header *st_Ether;
+    
     /* 랜카드 종류를 출력한다. */
-    switch(pcap_datalink(nicdev))
+    switch(i_type)
     {
     case 0:
         printf("no link-layer encapsulation\n");
+        *data = 0;
         break;
                                 
     case 1:
         printf("Ethernet (10Mb)\n");
+        st_Ether = (struct ether_header *)(*data);
         break;
 
     case 2:
@@ -89,8 +110,6 @@ int main()
         break;
             
     }
-
-    st_Ether = (struct ether_header *)uc_data;
 
     /* MAC Address를 출력한다. */
     printf("MAC [%02X:%02X:%02X:%02X:%02X:%02X]" 
@@ -132,7 +151,16 @@ int main()
         /* 패킷의 종류를 출력 */
         /* printf("%04X\n", ntohs(st_Ether -> ether_type)); /\* 호스트 형태로 바꾸겠다. *\/ */
     }
+    
+    return 0;
+}
 
+int emb_ip_header(const unsigned char **data)
+{
+    struct ether_header *st_Ether;
+    struct ip *st_ip;
+    
+    st_Ether = (struct ether_header *)*data;
     /* Print IP Version */
     st_ip = (struct ip *)(st_Ether + 1);
 
@@ -196,74 +224,6 @@ int main()
 	printf("SO Transport Protocol Class 4.\n");
 	break;
     
-    case IPPROTO_DCCP :
-	printf("Datagram Congestion Control Protocol.\n");
-	break;
-    
-    case IPPROTO_IPV6 :
-	printf("IPv6 header.\n");
-	break;
-    
-    case IPPROTO_ROUTING :
-	printf("Pv6 routing header.\n");
-	break;
-    
-    case IPPROTO_FRAGMENT :
-	printf("v6 fragmentation header.\n");
-	break;
-    
-    case IPPROTO_RSVP :
-	printf("Reservation Protocol.\n");
-	break;
-    
-    case IPPROTO_GRE :
-	printf("General Routing Encapsulation.\n");
-	break;
-    
-    case IPPROTO_ESP :
-	printf("encapsulating security payload.\n");
-	break;
-    
-    case IPPROTO_AH :
-	printf("authentication header.\n");
-	break;
-    
-    case IPPROTO_ICMPV6 :
-	printf("ICMPv6.\n");
-	break;
-    
-    case IPPROTO_NONE :
-	printf("IPv6 no next header.\n");
-	break;
-    
-    case IPPROTO_DSTOPTS :
-	printf("Pv6 destination options.\n");
-	break;
-    
-    case IPPROTO_MTP :
-	printf("Multicast Transport Protocol.\n");
-	break;
-    
-    case IPPROTO_ENCAP :
-	printf("Encapsulation Header.\n");
-	break;
-    
-    case IPPROTO_PIM :
-	printf("Protocol Independent Multicast.\n");
-	break;
-    
-    case IPPROTO_COMP :
-	printf("Compression Header Protocol.\n");
-	break;
-    
-    case IPPROTO_SCTP :
-	printf("Stream Control Transmission Protocol.\n");
-	break;
-    
-    case IPPROTO_UDPLITE :
-	printf("DP-Lite protocol.\n");
-	break;
-    
     case IPPROTO_RAW :
 	printf("Raw IP packets.\n");
 	break;
@@ -280,7 +240,6 @@ int main()
      * 두번에 걸쳐서 출력을 해 주어야 한다. */
     printf("IP [%s] -> ", inet_ntoa(st_ip -> ip_src));
     printf("[%s]\n", inet_ntoa(st_ip -> ip_dst));
-    
-    pcap_close(nicdev);		
+
     return 0;
 }
