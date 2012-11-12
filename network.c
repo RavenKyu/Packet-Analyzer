@@ -25,11 +25,11 @@ int main(int argc, char *argv[])
     
     const unsigned char *uc_data;
     struct pcap_pkthdr info;
-    
+
     /* 인수로 장치명을 받았는지 검사 */
-    if(argv[1] == NULL)         /* 인자 없이 프로그램이 실행 됐을 시 */
+    if(argc == 1)         /* 인자 없이 프로그램이 실행 됐을 시 */
     {
-        argv[1] == pcap_lookupdev(errbuf); /* lookup 함수를 통해 최하위 통신 장치로 설정된다. */
+        argv[1] = pcap_lookupdev(errbuf); /* lookup 함수를 통해 최하위 통신 장치로 설정된다. */
     }
     nicdev = dev_open(argv[1]);        /* 장치를 연다 */
     
