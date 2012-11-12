@@ -4,29 +4,45 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include <netinet/udp.h>
 
 #include "hex_viewer.h"
 
 char errbuf[PCAP_ERRBUF_SIZE];
 
 pcap_t *emb_open(void);                 /* 장치를 열고 셋팅하는 함수 */
-int emb_data_link(int, const unsigned char **);
-int emb_ip_header(const unsigned char **);
-int emb_tcp_header(const unsigned char **);
+void *checking_data_link(int *, const unsigned char **);
+void *header_Lv2_IP(int *, const unsigned char **);
+void *tcp_header(int*, const unsigned char **);
+void *udp_header(int*, const unsigned char **);
 
 int main()
 {
     pcap_t *nicdev;         /* 장치 변수 */
+    int datalink;
+
+    void *(*function)(int *, const unsigned char **);
+    
     const unsigned char *uc_data;
     struct pcap_pkthdr info;
 
     nicdev = emb_open();        /* 장치를 연다 */
     uc_data = pcap_next(nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
     hex_viewer((unsigned char *)uc_data, 10); /* 헥사뷰로 출력 */
-    emb_data_link(pcap_datalink(nicdev), &uc_data); /*헤더 정보를 가져온다. */
-    emb_ip_header(&uc_data);
 
-    emb_tcp_header(&uc_data);    
+    datalink = pcap_datalink(nicdev);
+    function = checking_data_link;
+
+    /* 기능 시작 */
+    while(1)
+    {
+        if(function == NULL)
+        {
+            break;
+        }
+        function = (char *)(*function)(&datalink, &uc_data);
+    }
+
     pcap_close(nicdev);
     
     return 0;    
@@ -37,16 +53,16 @@ pcap_t *emb_open(void)                 /* 장치를 열고 셋팅하는 함수 *
     char *nic_name;
     pcap_t *nicdev;         /* 장치 변수 */
     
-    nic_name = pcap_lookupdev(errbuf); /* 장치명을 가져온다. */
+    /* nic_name = pcap_lookupdev(errbuf); /\* 장치명을 가져온다. *\/ */
+    nic_name = "wlan0";
     
-    /* if(nic_name == NULL)                 */
-    /* { */
-    /*     printf("Device Error\n"); */
-    /*     return 0; */
-    /* } */
+    if(nic_name == NULL)
+    {
+        printf("Device Error\n");
+        return 0;
+    }
 
-    /* nicdev = pcap_open_live(nic_name, 1400, 1, 0, errbuf); /\* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*\/ */
-    nicdev = pcap_open_live("eth1", 1400, 1, 0, errbuf); /* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*/
+    nicdev = pcap_open_live(nic_name, 1400, 1, 0, errbuf); /* 장치를 연다 , 장치 가져올 패킷 길이, 1로 해주어야 아무 패킷이나 다 받아온다.*/
     if(nicdev == NULL)                                     /* 장치 열기를 실패했을 경우 error 메세지를 출력 후 종료 */
     {
         printf("The device open error :: %s \n", errbuf);
@@ -59,12 +75,13 @@ pcap_t *emb_open(void)                 /* 장치를 열고 셋팅하는 함수 *
     return nicdev;
 }
 
-int emb_data_link(int i_type, const unsigned char **data)
+void *checking_data_link(int *i_type, const unsigned char **data)
 {
     struct ether_header *st_Ether;
+    char *next = NULL;
     
     /* 랜카드 종류를 출력한다. */
-    switch(i_type)
+    switch(*i_type)
     {
     case 0:
         printf("no link-layer encapsulation\n");
@@ -74,6 +91,7 @@ int emb_data_link(int i_type, const unsigned char **data)
     case 1:
         printf("Ethernet (10Mb)\n");
         st_Ether = (struct ether_header *)(*data);
+        
         break;
 
     case 2:
@@ -139,7 +157,7 @@ int emb_data_link(int i_type, const unsigned char **data)
             
     case ETHERTYPE_IP:
         printf("IP\n");
-        break;
+        next = (char *)header_Lv2_IP;
             
     case ETHERTYPE_ARP:
         printf("Address resolution\n");
@@ -155,13 +173,14 @@ int emb_data_link(int i_type, const unsigned char **data)
         /* printf("%04X\n", ntohs(st_Ether -> ether_type)); /\* 호스트 형태로 바꾸겠다. *\/ */
     }
     
-    return 0;
+    return (char *)next;
 }
 
-int emb_ip_header(const unsigned char **data)
+void *header_Lv2_IP(int* type, const unsigned char **data)
 {
     struct ether_header *st_Ether;
     struct ip *st_ip;
+    char *next = NULL;
     
     st_Ether = (struct ether_header *)*data;
     /* Print IP Version */
@@ -185,6 +204,7 @@ int emb_ip_header(const unsigned char **data)
 
     printf("Time to live : %d\n", st_ip -> ip_ttl);
     printf("Protocol : ");
+    
     switch(st_ip -> ip_p)
     {
     case IPPROTO_IP:
@@ -205,6 +225,7 @@ int emb_ip_header(const unsigned char **data)
     
     case IPPROTO_TCP :
 	printf("Transmission Control Protocol.\n");
+        next = (char *)tcp_header;
 	break;
     
     case IPPROTO_EGP :
@@ -217,6 +238,7 @@ int emb_ip_header(const unsigned char **data)
     
     case IPPROTO_UDP :
 	printf(" User Datagram Protocol.\n");
+        next = (char *)udp_header;
 	break;
     
     case IPPROTO_IDP :
@@ -235,7 +257,7 @@ int emb_ip_header(const unsigned char **data)
         printf(" \n");
         break;
     }
-    
+
     printf("Checksum : %04X\n", ntohs(st_ip -> ip_sum));
 
     /* IP 출력시 주의해야 할 점.
@@ -244,10 +266,10 @@ int emb_ip_header(const unsigned char **data)
     printf("IP [%s] -> ", inet_ntoa(st_ip -> ip_src));
     printf("[%s]\n", inet_ntoa(st_ip -> ip_dst));
 
-    return 0;
+    return next;
 }
 
-int emb_tcp_header(const unsigned char **tcp_info)
+void *tcp_header(int *not_use, const unsigned char **tcp_info)
 {
     struct tcphdr *tcp_header;
 
@@ -257,6 +279,20 @@ int emb_tcp_header(const unsigned char **tcp_info)
     printf("Destination Port : %d\n", ntohs(tcp_header -> dest));
     printf("Seq : %d\n", ntohs(tcp_header -> seq));
     printf("Ack : %d\n", ntohs(tcp_header -> ack_seq));
+    
+    return 0;
+}
+
+void *udp_header(int *not_use, const unsigned char **udp_info)
+{
+    struct udphdr *udp_header;
+
+    udp_header = (struct udphdr *)(*udp_info + 34);
+
+    printf("Source Port : %d\n", ntohs(udp_header -> source));
+    printf("Destination Port : %d\n", ntohs(udp_header -> dest));
+    printf("Len : %d\n", ntohs(udp_header -> len));
+    printf("Check : %d\n", ntohs(udp_header -> check));
     
     return 0;
 }
