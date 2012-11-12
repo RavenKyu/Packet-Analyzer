@@ -10,13 +10,13 @@
 
 char errbuf[PCAP_ERRBUF_SIZE];
 
-pcap_t *dev_open(void);                 /* 장치를 열고 셋팅하는 함수 */
+pcap_t *dev_open(char *);                 /* 장치를 열고 셋팅하는 함수 */
 void *checking_data_link(int *, const unsigned char **);
 void *header_Lv2_IP(int *, const unsigned char **);
 void *tcp_header(int*, const unsigned char **);
 void *udp_header(int*, const unsigned char **);
 
-int main()
+int main(int argc, char *argv[])
 {
     pcap_t *nicdev;         /* 장치 변수 */
     int datalink;
@@ -25,12 +25,18 @@ int main()
     
     const unsigned char *uc_data;
     struct pcap_pkthdr info;
-
-    nicdev = dev_open();        /* 장치를 연다 */
+    
+    /* 인수로 장치명을 받았는지 검사 */
+    if(argv[1] == NULL)         /* 인자 없이 프로그램이 실행 됐을 시 */
+    {
+        argv[1] == pcap_lookupdev(errbuf); /* lookup 함수를 통해 최하위 통신 장치로 설정된다. */
+    }
+    nicdev = dev_open(argv[1]);        /* 장치를 연다 */
+    
     uc_data = pcap_next(nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
-    hex_viewer((unsigned char *)uc_data, 10); /* 헥사뷰로 출력 */
-
     datalink = pcap_datalink(nicdev);
+    
+    hex_viewer((unsigned char *)uc_data, 10); /* 헥사뷰로 출력 */
     function = checking_data_link;
 
     /* 기능 시작 */
@@ -48,13 +54,11 @@ int main()
     return 0;    
 }
 
-pcap_t *dev_open(void)                 /* 장치를 열고 셋팅하는 함수 */
+pcap_t *dev_open(char *nic_name)                 /* 장치를 열고 셋팅하는 함수 */
 {
-    char *nic_name;
     pcap_t *nicdev;         /* 장치 변수 */
     
     /* nic_name = pcap_lookupdev(errbuf); /\* 장치명을 가져온다. *\/ */
-    nic_name = "wlan0";
     
     if(nic_name == NULL)
     {
