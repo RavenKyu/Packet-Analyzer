@@ -10,7 +10,7 @@
 
 char errbuf[PCAP_ERRBUF_SIZE];
 
-pcap_t *emb_open(void);                 /* 장치를 열고 셋팅하는 함수 */
+pcap_t *dev_open(void);                 /* 장치를 열고 셋팅하는 함수 */
 void *checking_data_link(int *, const unsigned char **);
 void *header_Lv2_IP(int *, const unsigned char **);
 void *tcp_header(int*, const unsigned char **);
@@ -26,7 +26,7 @@ int main()
     const unsigned char *uc_data;
     struct pcap_pkthdr info;
 
-    nicdev = emb_open();        /* 장치를 연다 */
+    nicdev = dev_open();        /* 장치를 연다 */
     uc_data = pcap_next(nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
     hex_viewer((unsigned char *)uc_data, 10); /* 헥사뷰로 출력 */
 
@@ -48,7 +48,7 @@ int main()
     return 0;    
 }
 
-pcap_t *emb_open(void)                 /* 장치를 열고 셋팅하는 함수 */
+pcap_t *dev_open(void)                 /* 장치를 열고 셋팅하는 함수 */
 {
     char *nic_name;
     pcap_t *nicdev;         /* 장치 변수 */
