@@ -11,10 +11,10 @@
 char errbuf[PCAP_ERRBUF_SIZE];
 
 pcap_t *dev_open(char *);                 /* 장치를 열고 셋팅하는 함수 */
-void *checking_data_link(int *, const unsigned char **);
-void *header_Lv2_IP(int *, const unsigned char **);
-void *tcp_header(int*, const unsigned char **);
-void *udp_header(int*, const unsigned char **);
+void *level_1_data_link(int *, const unsigned char **);
+void *level_2_IP(int *, const unsigned char **);
+void *level_3_tcp(int*, const unsigned char **);
+void *level_3_udp(int*, const unsigned char **);
 
 int main(int argc, char *argv[])
 {
@@ -32,13 +32,13 @@ int main(int argc, char *argv[])
         argv[1] = pcap_lookupdev(errbuf); /* lookup 함수를 통해 최하위 통신 장치로 설정된다. */
     }
     nicdev = dev_open(argv[1]);        /* 장치를 연다 */
-    
+
     uc_data = pcap_next(nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
     datalink = pcap_datalink(nicdev);
     
     hex_viewer((unsigned char *)uc_data, 10); /* 헥사뷰로 출력 */
-    function = checking_data_link;
-
+    function = level_1_data_link;
+    
     /* 기능 시작 */
     while(1)
     {
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         {
             break;
         }
-        function = (char *)(*function)(&datalink, &uc_data);
+        function = (*function)(&datalink, &uc_data);
     }
 
     pcap_close(nicdev);
@@ -79,7 +79,7 @@ pcap_t *dev_open(char *nic_name)                 /* 장치를 열고 셋팅하�
     return nicdev;
 }
 
-void *checking_data_link(int *i_type, const unsigned char **data)
+void *level_1_data_link(int *i_type, const unsigned char **data)
 {
     struct ether_header *st_Ether;
     char *next = NULL;
@@ -91,7 +91,7 @@ void *checking_data_link(int *i_type, const unsigned char **data)
         printf("no link-layer encapsulation\n");
         *data = 0;
         break;
-                                
+
     case 1:
         printf("Ethernet (10Mb)\n");
         st_Ether = (struct ether_header *)(*data);
@@ -161,7 +161,7 @@ void *checking_data_link(int *i_type, const unsigned char **data)
             
     case ETHERTYPE_IP:
         printf("IP\n");
-        next = (char *)header_Lv2_IP;
+        next = (char *)level_2_IP;
             
     case ETHERTYPE_ARP:
         printf("Address resolution\n");
@@ -180,7 +180,7 @@ void *checking_data_link(int *i_type, const unsigned char **data)
     return (char *)next;
 }
 
-void *header_Lv2_IP(int* type, const unsigned char **data)
+void *level_2_IP(int* type, const unsigned char **data)
 {
     struct ether_header *st_Ether;
     struct ip *st_ip;
@@ -229,7 +229,7 @@ void *header_Lv2_IP(int* type, const unsigned char **data)
     
     case IPPROTO_TCP :
 	printf("Transmission Control Protocol.\n");
-        next = (char *)tcp_header;
+        next = (char *)level_3_tcp;
 	break;
     
     case IPPROTO_EGP :
@@ -242,7 +242,7 @@ void *header_Lv2_IP(int* type, const unsigned char **data)
     
     case IPPROTO_UDP :
 	printf(" User Datagram Protocol.\n");
-        next = (char *)udp_header;
+        next = (char *)level_3_udp;
 	break;
     
     case IPPROTO_IDP :
@@ -273,7 +273,7 @@ void *header_Lv2_IP(int* type, const unsigned char **data)
     return next;
 }
 
-void *tcp_header(int *not_use, const unsigned char **tcp_info)
+void *level_3_tcp(int *not_use, const unsigned char **tcp_info)
 {
     struct tcphdr *tcp_header;
 
@@ -287,7 +287,7 @@ void *tcp_header(int *not_use, const unsigned char **tcp_info)
     return 0;
 }
 
-void *udp_header(int *not_use, const unsigned char **udp_info)
+void *level_3_udp(int *not_use, const unsigned char **udp_info)
 {
     struct udphdr *udp_header;
 
