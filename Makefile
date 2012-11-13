@@ -1,6 +1,10 @@
 CC = gcc -g
 OBJECTS = network.o \
-	hex_viewer.o 
+	hex_viewer.o \
+	basement.o \
+	level_1.o \
+	level_2.o \
+	level_3.o
 
 all: BEGIN $(OBJECTS)
 	@$(CC) -o network $(OBJECTS) -lpcap
@@ -17,6 +21,18 @@ hex_viewer.o : hex_viewer.c
 
 file_io.o : file_io.c
 	@$(CC) -c file_io.c
+
+basement.o : basement.c
+	@$(CC) -c basement.c
+
+level_1.o : level_1.c
+	@$(CC) -c level_1.c
+
+level_2.o : level_2.c
+	@$(CC) -c level_2.c
+
+level_3.o : level_3.c
+	@$(CC) -c level_3.c
 
 clean :
 	@rm -rf $(OBJECTS)
