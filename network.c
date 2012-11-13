@@ -1,5 +1,5 @@
 #include <stdio.h>
-#Include <pcap/pcap.h>          /* man page에서 가리키는 위치가 잘못 적혀 있을 수도 있다. */
+#include <pcap/pcap.h>          /* man page에서 가리키는 위치가 잘못 적혀 있을 수도 있다. */
 #include <net/ethernet.h>       /* 패킷의 구조체를 명시 해 두었다. */
 #include <netinet/ip.h>
 #include <arpa/inet.h>
@@ -12,7 +12,6 @@ typedef struct
 {
     char *ip_address;
     char *port_number;
-    
     pcap_t *nicdev;         /* 장치 변수 */
     const unsigned char *uc_data;
     int datalink;
@@ -20,6 +19,7 @@ typedef struct
 
 char errbuf[PCAP_ERRBUF_SIZE];
 
+void check_arguments(int, char *[], DATA_INFO *); /* 인자를 받았는지 검사하는 함수 */
 pcap_t *dev_open(char *);                 /* 장치를 열고 셋팅하는 함수 */
 void *get_packet(DATA_INFO *);
 void *level_1_data_link(DATA_INFO *);
@@ -29,25 +29,15 @@ void *level_3_udp(DATA_INFO *);
 
 int main(int argc, char *argv[])
 {
-
     void *(*function)(DATA_INFO *);
     
+    DATA_INFO data_info = {NULL, };
 
-    DATA_INFO data_info = {NULL, NULL, NULL, NULL};
+    /* 프로그램 실행시 받은 인자를 검사. */
+    check_arguments(argc, argv, &data_info);
 
-    /* 인수로 장치명을 받았는지 검사 */
-    if(argc == 1)         /* 인자 없이 프로그램이 실행 됐을 시 */
-    {
-        argv[1] = pcap_lookupdev(errbuf); /* lookup 함수를 통해 최하위 통신 장치로 설정된다. */
-    }
-    else if(2 < argc || 4 > argc)
-    {
-        data_info.ip_address = argv[2];
-        data_info.port_number = argv[3];
-    }
-    printf("%s %d\n", data_info.ip_address, atoi(data_info.port_number));
-    
-    data_info.nicdev = dev_open(argv[1]);        /* 장치를 연다 */
+    /* 장치를 연다 */
+    data_info.nicdev = dev_open(argv[1]);
     function = get_packet;
     
     /* 기능 시작 */
@@ -63,6 +53,22 @@ int main(int argc, char *argv[])
     pcap_close(data_info.nicdev);
     
     return 0;    
+}
+
+void check_arguments(int argc, char *argv[], DATA_INFO *data_info)
+{
+    /* 인수로 장치명을 받았는지 검사 */
+    if(argc == 1)         /* 인자 없이 프로그램이 실행 됐을 시 */
+    {
+        argv[1] = pcap_lookupdev(errbuf); /* lookupdev 함수를 통해 최하위 통신 장치로 설정된다. */
+    }
+    else if(2 < argc || 4 > argc) /* 인자로 IP Address와 Port를 받았을 경우 */
+    {
+        data_info -> ip_address = argv[2];
+        data_info -> port_number = argv[3];
+    }
+
+    return;
 }
 
 pcap_t *dev_open(char *nic_name)                 /* 장치를 열고 셋팅하는 함수 */
