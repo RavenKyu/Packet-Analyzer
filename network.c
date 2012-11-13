@@ -73,8 +73,6 @@ pcap_t *dev_open(char *nic_name)                 /* 장치를 열고 셋팅하�
             
         return 0;
     }
-
-    printf("%s\n", nic_name);
     
     return nicdev;
 }
@@ -85,6 +83,8 @@ void *level_1_data_link(int *i_type, const unsigned char **data)
     char *next = NULL;
     
     /* 랜카드 종류를 출력한다. */
+    printf("--------[ Level 1 : Network Connection ]---------------------------------------\n");
+    printf("Network Connection          : ");
     switch(*i_type)
     {
     case 0:
@@ -137,22 +137,27 @@ void *level_1_data_link(int *i_type, const unsigned char **data)
     }
 
     /* MAC Address를 출력한다. */
-    printf("MAC [%02X:%02X:%02X:%02X:%02X:%02X]" 
-           " <- [%02X:%02X:%02X:%02X:%02X:%02X] \n", 
-           st_Ether -> ether_dhost[0], /* 목적지 MAC Address */
-           st_Ether -> ether_dhost[1],
-           st_Ether -> ether_dhost[2],
-           st_Ether -> ether_dhost[3],
-           st_Ether -> ether_dhost[4],
-           st_Ether -> ether_dhost[5],
+    printf("MAC Address                 : [%02X:%02X:%02X:%02X:%02X:%02X]" 
+           " -> [%02X:%02X:%02X:%02X:%02X:%02X] \n",
            st_Ether -> ether_shost[0], /* 출발지 MAC Address */
            st_Ether -> ether_shost[1],
            st_Ether -> ether_shost[2],
            st_Ether -> ether_shost[3],
            st_Ether -> ether_shost[4],
-           st_Ether -> ether_shost[5]
+           st_Ether -> ether_shost[5],
+           st_Ether -> ether_dhost[0], /* 목적지 MAC Address */
+           st_Ether -> ether_dhost[1],
+           st_Ether -> ether_dhost[2],
+           st_Ether -> ether_dhost[3],
+           st_Ether -> ether_dhost[4],
+           st_Ether -> ether_dhost[5]
+
         );
-        
+    
+    putchar('\n');
+    printf("--------[ Level 2 : Network ]--------------------------------------------------\n");
+
+    printf("Network                     : ");
     switch(ntohs(st_Ether -> ether_type))
     {
     case ETHERTYPE_PUP:
@@ -162,6 +167,7 @@ void *level_1_data_link(int *i_type, const unsigned char **data)
     case ETHERTYPE_IP:
         printf("IP\n");
         next = (char *)level_2_IP;
+        break;
             
     case ETHERTYPE_ARP:
         printf("Address resolution\n");
@@ -195,19 +201,22 @@ void *level_2_IP(int* type, const unsigned char **data)
      * 네트워크 상의 값들은 모두 빅 엔디안 상태에 있다.*/
 
     /* IP Header 출력 */
-    printf("Version : %d\n", st_ip -> ip_v);
-    printf("Header length : %d byte\n", (st_ip -> ip_hl) * 4);
-    printf("Type of service : %02X\n", st_ip -> ip_tos);
-    printf("Total length : %d\n", ntohs(st_ip -> ip_len));
-    printf("Identification : %d(%04X)\n", ntohs(st_ip -> ip_id), ntohs(st_ip -> ip_id));
+    printf("Version                     : %d\n", st_ip -> ip_v);
+    printf("Header length               : %d byte\n", (st_ip -> ip_hl) * 4);
+    printf("Type of service             : %02X\n", st_ip -> ip_tos);
+    printf("Total length                : %d\n", ntohs(st_ip -> ip_len));
+    printf("Identification              : %d(%04X)\n", ntohs(st_ip -> ip_id), ntohs(st_ip -> ip_id));
 
-    printf("Flagment offset filed : %d\n", (ntohs(st_ip -> ip_off) & IP_OFFMASK));
-    printf("Reserved bit : %s\n", ((ntohs(st_ip -> ip_off) & IP_RF) == IP_RF) ? "Set" : "Not set");
-    printf("Don't fragment bit : %s\n", ((ntohs(st_ip -> ip_off) & IP_DF) == IP_DF) ? "Set" : "Not set");
-    printf("More fragment bit : %s\n", ((ntohs(st_ip -> ip_off) & IP_MF) == IP_MF) ? "Set" : "Not set");
+    printf("Flagment offset filed       : %d\n", (ntohs(st_ip -> ip_off) & IP_OFFMASK));
+    printf("Reserved bit                : %s\n", ((ntohs(st_ip -> ip_off) & IP_RF) == IP_RF) ? "Set" : "Not set");
+    printf("Don't fragment bit          : %s\n", ((ntohs(st_ip -> ip_off) & IP_DF) == IP_DF) ? "Set" : "Not set");
+    printf("More fragment bit           : %s\n", ((ntohs(st_ip -> ip_off) & IP_MF) == IP_MF) ? "Set" : "Not set");
 
-    printf("Time to live : %d\n", st_ip -> ip_ttl);
-    printf("Protocol : ");
+    printf("Time to live                : %d\n", st_ip -> ip_ttl);
+    
+    putchar('\n');
+    printf("--------[ Level 3 : Protocol ]------------------------------------------------\n");    
+    printf("Protocol                    : ");
     
     switch(st_ip -> ip_p)
     {
@@ -237,11 +246,11 @@ void *level_2_IP(int* type, const unsigned char **data)
 	break;
     
     case IPPROTO_PUP :
-	printf(" PUP protocol.\n");
+	printf("PUP protocol.\n");
 	break;
     
     case IPPROTO_UDP :
-	printf(" User Datagram Protocol.\n");
+	printf("User Datagram Protocol.\n");
         next = (char *)level_3_udp;
 	break;
     
@@ -258,16 +267,16 @@ void *level_2_IP(int* type, const unsigned char **data)
 	break;
     
     default:
-        printf(" \n");
+        printf("\n");
         break;
     }
 
-    printf("Checksum : %04X\n", ntohs(st_ip -> ip_sum));
+    printf("Checksum                    : %04X\n", ntohs(st_ip -> ip_sum));
 
     /* IP 출력시 주의해야 할 점.
      * IP를 출력시 버퍼가 중복되기 때문에
      * 두번에 걸쳐서 출력을 해 주어야 한다. */
-    printf("IP [%s] -> ", inet_ntoa(st_ip -> ip_src));
+    printf("IP Address                  : [%s] -> ", inet_ntoa(st_ip -> ip_src));
     printf("[%s]\n", inet_ntoa(st_ip -> ip_dst));
 
     return next;
@@ -279,11 +288,11 @@ void *level_3_tcp(int *not_use, const unsigned char **tcp_info)
 
     tcp_header = (struct tcphdr *)(*tcp_info + 34);
 
-    printf("Source Port : %d\n", ntohs(tcp_header -> source));
-    printf("Destination Port : %d\n", ntohs(tcp_header -> dest));
-    printf("Seq : %d\n", ntohs(tcp_header -> seq));
-    printf("Ack : %d\n", ntohs(tcp_header -> ack_seq));
-    
+    printf("Source Port                 : %d\n", ntohs(tcp_header -> source));
+    printf("Destination Port            : %d\n", ntohs(tcp_header -> dest));
+    printf("Seq                         : %d\n", ntohs(tcp_header -> seq));
+    printf("Ack                         : %d\n", ntohs(tcp_header -> ack_seq));
+    putchar('\n');
     return 0;
 }
 
