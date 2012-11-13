@@ -8,29 +8,44 @@
 
 #include "hex_viewer.h"
 
+typedef struct
+{
+    char *ip_address;
+    char *port_number;
+} IP_PORT_INFO;
+
 char errbuf[PCAP_ERRBUF_SIZE];
 
 pcap_t *dev_open(char *);                 /* 장치를 열고 셋팅하는 함수 */
-void *level_1_data_link(int *, const unsigned char **);
-void *level_2_IP(int *, const unsigned char **);
-void *level_3_tcp(int*, const unsigned char **);
-void *level_3_udp(int*, const unsigned char **);
+void *level_1_data_link(int *, const unsigned char **, IP_PORT_INFO *);
+void *level_2_IP(int *, const unsigned char **, IP_PORT_INFO *);
+void *level_3_tcp(int*, const unsigned char **, IP_PORT_INFO *);
+void *level_3_udp(int*, const unsigned char **, IP_PORT_INFO *);
 
 int main(int argc, char *argv[])
 {
     pcap_t *nicdev;         /* 장치 변수 */
     int datalink;
 
-    void *(*function)(int *, const unsigned char **);
+    void *(*function)(int *, const unsigned char **, IP_PORT_INFO *);
     
     const unsigned char *uc_data;
     struct pcap_pkthdr info;
+    IP_PORT_INFO ip_port = {NULL, NULL};
 
     /* 인수로 장치명을 받았는지 검사 */
     if(argc == 1)         /* 인자 없이 프로그램이 실행 됐을 시 */
     {
         argv[1] = pcap_lookupdev(errbuf); /* lookup 함수를 통해 최하위 통신 장치로 설정된다. */
     }
+    else if(2 < argc || 4 > argc)
+    {
+        ip_port.ip_address = argv[2];
+        ip_port.port_number = argv[3];
+    }
+    printf("%s %d\n", ip_port.ip_address, atoi(ip_port.port_number));
+
+    
     nicdev = dev_open(argv[1]);        /* 장치를 연다 */
 
     uc_data = pcap_next(nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
@@ -46,7 +61,7 @@ int main(int argc, char *argv[])
         {
             break;
         }
-        function = (*function)(&datalink, &uc_data);
+        function = (*function)(&datalink, &uc_data, &ip_port);
     }
 
     pcap_close(nicdev);
@@ -77,10 +92,21 @@ pcap_t *dev_open(char *nic_name)                 /* 장치를 열고 셋팅하�
     return nicdev;
 }
 
-void *level_1_data_link(int *i_type, const unsigned char **data)
+void *level_1_data_link(int *i_type, const unsigned char **data, IP_PORT_INFO *ip_port_info)
 {
     struct ether_header *st_Ether;
     char *next = NULL;
+
+    /* 어떤 모드인지 검사 */
+    if(ip_port_info -> ip_address != NULL)
+    {
+        if(*i_type != 1)        /* Ethernet이 아닐 경우 */
+        {
+            printf("Level 1 :: Capturing the packet from the specific IP address is on the \"Ethernet\" only.\n");
+
+            return (char *)level_1_data_link;
+        }
+    }
     
     /* 랜카드 종류를 출력한다. */
     printf("--------[ Level 1 : Network Connection ]---------------------------------------\n");
@@ -155,6 +181,18 @@ void *level_1_data_link(int *i_type, const unsigned char **data)
         );
     
     putchar('\n');
+
+    /* TCP인지 검사 */
+    if(ip_port_info -> ip_address != NULL)
+    {
+        if(ntohs(st_Ether -> ether_type) != ETHERTYPE_IP)        /* Ethernet이 아닐 경우 */
+        {
+            printf("Level 2 :: Capturing the packet from the specific IP address is on the \"IP\" only.\n");
+            
+            return (char *)level_1_data_link;
+        }
+    }
+    
     printf("--------[ Level 2 : Network ]--------------------------------------------------\n");
 
     printf("Network                     : ");
@@ -186,7 +224,7 @@ void *level_1_data_link(int *i_type, const unsigned char **data)
     return (char *)next;
 }
 
-void *level_2_IP(int* type, const unsigned char **data)
+void *level_2_IP(int* type, const unsigned char **data, IP_PORT_INFO *ip_port_info)
 {
     struct ether_header *st_Ether;
     struct ip *st_ip;
@@ -215,6 +253,18 @@ void *level_2_IP(int* type, const unsigned char **data)
     printf("Time to live                : %d\n", st_ip -> ip_ttl);
     
     putchar('\n');
+
+    /* TCP인지 검사 */
+    if(ip_port_info -> ip_address != NULL)
+    {
+        if(st_ip -> ip_p != IPPROTO_TCP)        /* Ethernet이 아닐 경우 */
+        {
+            printf("Level 3 :: Capturing the packet from the specific IP address is on the \"TCP\" only.\n");
+
+            return (char *)level_1_data_link;
+        }
+    }
+    
     printf("--------[ Level 3 : Protocol ]------------------------------------------------\n");    
     printf("Protocol                    : ");
     
@@ -282,7 +332,7 @@ void *level_2_IP(int* type, const unsigned char **data)
     return next;
 }
 
-void *level_3_tcp(int *not_use, const unsigned char **tcp_info)
+void *level_3_tcp(int *not_use, const unsigned char **tcp_info, IP_PORT_INFO *ip_port_info)
 {
     struct tcphdr *tcp_header;
 
@@ -296,7 +346,7 @@ void *level_3_tcp(int *not_use, const unsigned char **tcp_info)
     return 0;
 }
 
-void *level_3_udp(int *not_use, const unsigned char **udp_info)
+void *level_3_udp(int *not_use, const unsigned char **udp_info, IP_PORT_INFO *IP_not_use)
 {
     struct udphdr *udp_header;
 
