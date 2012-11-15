@@ -15,9 +15,13 @@ void *level_1_data_link(DATA_INFO *data_info)
             return (char *)get_packet;
         }
     }
+
+    if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
+    {
+        /* 랜카드 종류를 출력한다. */
+        printf("--------[ Level 1 : Network Connection ]---------------------------------------\n");
+    }
     
-    /* 랜카드 종류를 출력한다. */
-    printf("--------[ Level 1 : Network Connection ]---------------------------------------\n");
     printf("Network Connection          : ");
     switch(data_info -> datalink)
     {
@@ -68,6 +72,8 @@ void *level_1_data_link(DATA_INFO *data_info)
             
     }
 
+    if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */     
+    {
     /* MAC Address를 출력한다. */
     printf("MAC Address                 : [%02X:%02X:%02X:%02X:%02X:%02X]" 
            " -> [%02X:%02X:%02X:%02X:%02X:%02X] \n",
@@ -86,7 +92,8 @@ void *level_1_data_link(DATA_INFO *data_info)
         );
     
     putchar('\n');
-
+    }
+    
     /* TCP인지 검사 */
     if(data_info -> ip_address != NULL)
     {
@@ -97,9 +104,12 @@ void *level_1_data_link(DATA_INFO *data_info)
             return (char *)get_packet;
         }
     }
-    
-    printf("--------[ Level 2 : Network ]--------------------------------------------------\n");
 
+    if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
+    {
+        printf("--------[ Level 2 : Network ]--------------------------------------------------\n");
+    }
+    
     printf("Network                     : ");
     switch(ntohs(st_Ether -> ether_type))
     {

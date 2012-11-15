@@ -27,6 +27,7 @@ void check_arguments(int argc, char *argv[], DATA_INFO *data_info)
                 buffer[i] = (*((((char *)(argv[4]) + 1) + i))); /* 옵션의 prefix 인 '-' 를 제외 한다. */
             }
 
+            putchar('\n');    /* 첫 줄을 비운다. */
             for(i = 0; ((strlen(argv[4])) - 1) > i; ++i) /* 받은 옵션을 활성화 한다. */
             {
                 switch(buffer[i])
@@ -42,17 +43,16 @@ void check_arguments(int argc, char *argv[], DATA_INFO *data_info)
                     break;
 
                 case 's':
-                    printf(":: [ Summary ] ");
-                    data_info -> option = data_info -> option | (1 << 1);
+                    printf(":: [ Summary ] "); /* Summary 모드를 활성화 한다. */
+                    data_info -> option = data_info -> option | (1 << 2);
                     break;
-
                 
                 default:
                     printf("\nWrong option(s) is detected. you may type wrong option.\n");
                     break;
                 }
             }
-            putchar('\n');
+            printf(" ::\n\n");
         }
     }
         
@@ -89,7 +89,10 @@ void *get_packet(DATA_INFO *data_info)
     data_info -> uc_data = pcap_next(data_info -> nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
     data_info -> datalink = pcap_datalink(data_info -> nicdev);
 
-    hex_viewer((unsigned char *)data_info -> uc_data, 10); /* 헥사뷰로 출력 */
+    if((data_info -> option & 0x04) != 0x04)
+    {
+        hex_viewer((unsigned char *)data_info -> uc_data, 10); /* 헥사뷰로 출력 */
+    }
     
     return (char *)level_1_data_link;
 }
