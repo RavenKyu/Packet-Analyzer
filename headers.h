@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
+#include <string.h>
 
 #include "hex_viewer.h"
 #include "struct.h"

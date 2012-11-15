@@ -26,6 +26,33 @@ void check_arguments(int argc, char *argv[], DATA_INFO *data_info)
             {
                 buffer[i] = (*((((char *)(argv[4]) + 1) + i))); /* 옵션의 prefix 인 '-' 를 제외 한다. */
             }
+
+            for(i = 0; ((strlen(argv[4])) - 1) > i; ++i) /* 받은 옵션을 활성화 한다. */
+            {
+                switch(buffer[i])
+                {
+                case 't':
+                    printf(":: [   TCP   ] ");
+                    data_info -> option = data_info -> option | (1 << 0);
+                    break;
+
+                case 'u':
+                    printf(":: [   UDP   ] ");
+                    data_info -> option = data_info -> option | (1 << 1);
+                    break;
+
+                case 's':
+                    printf(":: [ Summary ] ");
+                    data_info -> option = data_info -> option | (1 << 1);
+                    break;
+
+                
+                default:
+                    printf("\nWrong option(s) is detected. you may type wrong option.\n");
+                    break;
+                }
+            }
+            putchar('\n');
         }
     }
         
