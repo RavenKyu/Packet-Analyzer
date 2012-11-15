@@ -22,9 +22,9 @@ void check_arguments(int argc, char *argv[], DATA_INFO *data_info)
         /* 주어진 옵션을 판단 */
         if(argc == 5)           /* 다섯번째 옵션이 있을 경우 진입 */
         {
-            for(i = 0, i_arg_counter = ((strlen(argv[4])) - 1); 0 <= i_arg_counter; --i_arg_counter, ++i)
+            for(i = 0, i_arg_counter = ((strlen(argv[4])) - 1); 0 <= i_arg_counter; --i_arg_counter, ++i) /* 옵션 내용을 배열로 저장  */
             {
-                buffer[i] = (*(((char *)(argv[4]) + i)));
+                buffer[i] = (*((((char *)(argv[4]) + 1) + i))); /* 옵션의 prefix 인 '-' 를 제외 한다. */
             }
         }
     }
