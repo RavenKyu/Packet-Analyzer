@@ -4,17 +4,31 @@ static char errbuf[PCAP_ERRBUF_SIZE];
 
 void check_arguments(int argc, char *argv[], DATA_INFO *data_info)
 {
+    int i_arg_counter;
+    int i;
+    char *a;
+    char buffer[9];
+    
     /* 인수로 장치명을 받았는지 검사 */
     if(argc == 1)         /* 인자 없이 프로그램이 실행 됐을 시 */
     {
         argv[1] = pcap_lookupdev(errbuf); /* lookupdev 함수를 통해 최하위 통신 장치로 설정된다. */
     }
-    else if(2 < argc || 4 > argc) /* 인자로 IP Address와 Port를 받았을 경우 */
+    else if(2 < argc || 8 > argc) /* 인자로 IP Address와 Port를 받았을 경우 */
     {
         data_info -> ip_address = argv[2];
         data_info -> port_number = argv[3];
-    }
 
+        /* 주어진 옵션을 판단 */
+        if(argc == 5)           /* 다섯번째 옵션이 있을 경우 진입 */
+        {
+            for(i = 0, i_arg_counter = ((strlen(argv[4])) - 1); 0 <= i_arg_counter; --i_arg_counter, ++i)
+            {
+                buffer[i] = (*(((char *)(argv[4]) + i)));
+            }
+        }
+    }
+        
     return;
 }
 
