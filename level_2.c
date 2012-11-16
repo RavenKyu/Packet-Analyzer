@@ -47,6 +47,20 @@ void *level_2_IP(DATA_INFO *ip_port_info)
         }
     }
 
+    if((ip_port_info -> option & 0x02) == 0x02) /* UDP 모드인지 검사 */
+    {
+        /* UDP인지 검사 */
+        if(ip_port_info -> ip_address != NULL)
+        {
+            if(st_ip -> ip_p != IPPROTO_UDP)        /* Ethernet이 아닐 경우 */
+            {
+                printf("Level 3 :: Capturing the packet from the specific IP address is on the \"UDP\" only.\n");
+
+                return (char *)get_packet;
+            }
+        }
+    }
+
     if((ip_port_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
     {
         printf("--------[ Level 3 : Protocol ]------------------------------------------------\n");
