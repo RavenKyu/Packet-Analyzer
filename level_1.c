@@ -4,6 +4,8 @@ void *level_1_data_link(DATA_INFO *data_info)
 {
     struct ether_header *st_Ether;
     char *next = NULL;
+    int i;
+    char buffer[20] = "";
 
     /* 어떤 모드인지 검사 */
     if(data_info -> ip_address != NULL)
@@ -18,72 +20,64 @@ void *level_1_data_link(DATA_INFO *data_info)
     switch(data_info -> datalink)
     {
     case 0:
-        data_info -> level_1_network_connection = "no link-layer encapsulation\n";
+        data_info -> level_1_network_connection = "no link-layer encapsulation";
         break;
 
     case 1:
-        data_info -> level_1_network_connection = "Ethernet (10Mb)\n";
+        data_info -> level_1_network_connection = "Ethernet (10Mb)";
         st_Ether = (struct ether_header *)data_info -> uc_data;
         break;
 
     case 2:
-        data_info -> level_1_network_connection = "Experimental Ethernet (3Mb)\n";
+        data_info -> level_1_network_connection = "Experimental Ethernet (3Mb)";
         break;
 
     case 3:
-        data_info -> level_1_network_connection = "Amateur Radio AX.25\n";
+        data_info -> level_1_network_connection = "Amateur Radio AX.25";
         break;
 
     case 4:
-        data_info -> level_1_network_connection = "Proteon ProNET Token Ring\n";
+        data_info -> level_1_network_connection = "Proteon ProNET Token Ring";
         break;
 
     case 5:
-        data_info -> level_1_network_connection = "Chaos\n";
+        data_info -> level_1_network_connection = "Chaos";
         break;
 
     case 6:
-        data_info -> level_1_network_connection = "IEEE 802 Networks\n";
+        data_info -> level_1_network_connection = "IEEE 802 Networks";
         break;
 
     case 7:
-        data_info -> level_1_network_connection = "ARCNET\n";
+        data_info -> level_1_network_connection = "ARCNET";
         break;
 
     case 8:
-        data_info -> level_1_network_connection = "Serial Line IP\n";
+        data_info -> level_1_network_connection = "Serial Line IP";
         break;
 
     case 9:
-        data_info -> level_1_network_connection = "Point-to-point Protocol\n";
+        data_info -> level_1_network_connection = "Point-to-point Protocol";
         break;
 
     case 10:
-        data_info -> level_1_network_connection = "FDDI\n";
+        data_info -> level_1_network_connection = "FDDI";
         break;
             
     }
 
-    if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */     
+    /* MAC Address 를 검출
+     * 추출한 값을 배열에 출발지, 도착지 차례로 넣는다. */
+    for(i = 0; 11 >= i; i++)
     {
-    /* MAC Address를 출력한다. */
-    printf("MAC Address                 : [%02X:%02X:%02X:%02X:%02X:%02X]" 
-           " -> [%02X:%02X:%02X:%02X:%02X:%02X] \n",
-           st_Ether -> ether_shost[0], /* 출발지 MAC Address */
-           st_Ether -> ether_shost[1],
-           st_Ether -> ether_shost[2],
-           st_Ether -> ether_shost[3],
-           st_Ether -> ether_shost[4],
-           st_Ether -> ether_shost[5],
-           st_Ether -> ether_dhost[0], /* 목적지 MAC Address */
-           st_Ether -> ether_dhost[1],
-           st_Ether -> ether_dhost[2],
-           st_Ether -> ether_dhost[3],
-           st_Ether -> ether_dhost[4],
-           st_Ether -> ether_dhost[5]
-        );
-    
-    putchar('\n');
+        if(6 > i)               /* 출발지 MAC Address */
+        {
+            data_info -> level_1_mac_address[i] = st_Ether -> ether_shost[i];
+        }
+        else                    /* 도착지 MAC Address */
+        {
+            data_info -> level_1_mac_address[i] = st_Ether -> ether_dhost[i - 5];
+        }
     }
     
     /* TCP인지 검사 */

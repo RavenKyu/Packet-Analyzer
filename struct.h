@@ -15,7 +15,8 @@ typedef struct
 
     /* 출력부 구조 */
     char *level_1_network_connection;
-        
+    char level_1_mac_address[11]; /* MAC Address */
+    
 } DATA_INFO;
 
 #endif  // __STRUCT_H__
