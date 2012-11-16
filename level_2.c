@@ -10,27 +10,17 @@ void *level_2_IP(DATA_INFO *ip_port_info)
     /* Print IP Version */
     st_ip = (struct ip *)(st_Ether + 1);
 
-    /* 주의해야 할 점.
-     * 2바이트 이상의 출력물은 모두 ntohs() 함수를 이용해야 한다.
-     * 네트워크 상의 값들은 모두 빅 엔디안 상태에 있다.*/
-
+    /* IP Header 출력*/
     if((ip_port_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
     {
         /* IP Header 출력 */
-        printf("Version                     : %d\n", st_ip -> ip_v);
-        printf("Header length               : %d byte\n", (st_ip -> ip_hl) * 4);
-        printf("Type of service             : %02X\n", st_ip -> ip_tos);
-        printf("Total length                : %d\n", ntohs(st_ip -> ip_len));
-        printf("Identification              : %d(%04X)\n", ntohs(st_ip -> ip_id), ntohs(st_ip -> ip_id));
-
-        printf("Flagment offset filed       : %d\n", (ntohs(st_ip -> ip_off) & IP_OFFMASK));
-        printf("Reserved bit                : %s\n", ((ntohs(st_ip -> ip_off) & IP_RF) == IP_RF) ? "Set" : "Not set");
-        printf("Don't fragment bit          : %s\n", ((ntohs(st_ip -> ip_off) & IP_DF) == IP_DF) ? "Set" : "Not set");
-        printf("More fragment bit           : %s\n", ((ntohs(st_ip -> ip_off) & IP_MF) == IP_MF) ? "Set" : "Not set");
-
-        printf("Time to live                : %d\n", st_ip -> ip_ttl);
-    
-        putchar('\n');
+        ip_port_info -> ip_v = st_ip -> ip_v;
+        ip_port_info -> ip_hl = st_ip -> ip_hl;
+        ip_port_info -> ip_tos = st_ip -> ip_tos;
+        ip_port_info -> ip_len = st_ip -> ip_len;
+        ip_port_info -> ip_id =  st_ip -> ip_id;
+        ip_port_info -> ip_off =  st_ip -> ip_off;
+        ip_port_info -> ip_ttl =  st_ip -> ip_ttl;
     }
 
     if((ip_port_info -> option & 0x01) == 0x01) /* TCP 모드인지 검사 */
@@ -40,8 +30,6 @@ void *level_2_IP(DATA_INFO *ip_port_info)
         {
             if(st_ip -> ip_p != IPPROTO_TCP)        /* Ethernet이 아닐 경우 */
             {
-                printf("Level 3 :: Capturing the packet from the specific IP address is on the \"TCP\" only.\n");
-
                 return (char *)get_packet;
             }
         }
@@ -54,83 +42,74 @@ void *level_2_IP(DATA_INFO *ip_port_info)
         {
             if(st_ip -> ip_p != IPPROTO_UDP)        /* Ethernet이 아닐 경우 */
             {
-                printf("Level 3 :: Capturing the packet from the specific IP address is on the \"UDP\" only.\n");
-
                 return (char *)get_packet;
             }
         }
     }
 
-    if((ip_port_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
-    {
-        printf("--------[ Level 3 : Protocol ]------------------------------------------------\n");
-    }
-    
-    printf("Protocol                    : ");
-    
     switch(st_ip -> ip_p)
     {
     case IPPROTO_IP:
-        printf("Dummy protocol for TCP.n");
+        ip_port_info -> level_3_ipproto = "Dummy protocol for TCP.";
         break;
 
     case IPPROTO_ICMP :
-	printf("Internet Control Message Protocol.\n");
+        ip_port_info -> level_3_ipproto = "Internet Control Message Protocol.";
 	break;
     
     case IPPROTO_IGMP :
-	printf("Internet Group Management Protocol\n");
+	ip_port_info -> level_3_ipproto = "Internet Group Management Protocol";
 	break;
     
     case IPPROTO_IPIP :
-	printf("IPIP tunnels (older KA9Q tunnels use 94).\n");
+        ip_port_info -> level_3_ipproto = "IPIP tunnels (older KA9Q tunnels use 94.";
 	break;
     
     case IPPROTO_TCP :
-	printf("Transmission Control Protocol.\n");
+        ip_port_info -> level_3_ipproto = "Transmission Control Protocol.";
         next = (char *)level_3_tcp;
 	break;
     
     case IPPROTO_EGP :
-	printf("Exterior Gateway Protocol.\n");
+        ip_port_info -> level_3_ipproto = "Exterior Gateway Protocol.";
 	break;
     
     case IPPROTO_PUP :
-	printf("PUP protocol.\n");
+        ip_port_info -> level_3_ipproto = "PUP protocol.";
 	break;
     
     case IPPROTO_UDP :
-	printf("User Datagram Protocol.\n");
+        ip_port_info -> level_3_ipproto = "User Datagram Protocol.";
         next = (char *)level_3_udp;
 	break;
     
     case IPPROTO_IDP :
-	printf("XNS IDP protocol.\n");
+        ip_port_info -> level_3_ipproto = "XNS IDP protocol.";
 	break;
     
     case IPPROTO_TP :
-	printf("SO Transport Protocol Class 4.\n");
+        ip_port_info -> level_3_ipproto = "SO Transport Protocol Class 4.";
 	break;
     
     case IPPROTO_RAW :
-	printf("Raw IP packets.\n");
+        ip_port_info -> level_3_ipproto = "Raw IP packets.";
 	break;
     
     default:
-        printf("\n");
+        ip_port_info -> level_3_ipproto = "";
         break;
     }
 
     if((ip_port_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
     {
-        printf("Checksum                    : %04X\n", ntohs(st_ip -> ip_sum));
+        ip_port_info -> ip_sum = st_ip -> ip_sum;
     }
     
     /* IP 출력시 주의해야 할 점.
      * IP를 출력시 버퍼가 중복되기 때문에
      * 두번에 걸쳐서 출력을 해 주어야 한다. */
-    printf("IP Address                  : [%s] -> ", inet_ntoa(st_ip -> ip_src));
-    printf("[%s]\n", inet_ntoa(st_ip -> ip_dst));
+    ip_port_info -> ip_src = st_ip -> ip_src;
+    ip_port_info -> ip_dst = st_ip -> ip_dst;
 
     return next;
 }

@@ -90,36 +90,28 @@ void *level_1_data_link(DATA_INFO *data_info)
             return (char *)get_packet;
         }
     }
-
-    if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
-    {
-        printf("--------[ Level 2 : Network ]--------------------------------------------------\n");
-    }
     
-    printf("Network                     : ");
     switch(ntohs(st_Ether -> ether_type))
     {
     case ETHERTYPE_PUP:
-        printf("Xerox PUP\n");
+        data_info -> level_2_network_layer = "Xerox PUP";
         break;
             
     case ETHERTYPE_IP:
-        printf("IP\n");
+        data_info -> level_2_network_layer = "IP";
         next = (char *)level_2_IP;
         break;
             
     case ETHERTYPE_ARP:
-        printf("Address resolution\n");
+        data_info -> level_2_network_layer = "Address resolution";
         break;
             
     case ETHERTYPE_REVARP:
-        printf("Reverse ARP\n");
+        data_info -> level_2_network_layer = "Reverse ARP";
         break;
             
     default:
-        printf("Unknown Type\n");
-        /* 패킷의 종류를 출력 */
-        /* printf("%04X\n", ntohs(st_Ether -> ether_type)); /\* 호스트 형태로 바꾸겠다. *\/ */
+        data_info -> level_2_network_layer = "Unknown Type";
     }
     
     return (char *)next;
