@@ -32,15 +32,18 @@ void *level_2_IP(DATA_INFO *ip_port_info)
     
         putchar('\n');
     }
-    
-    /* TCP인지 검사 */
-    if(ip_port_info -> ip_address != NULL)
-    {
-        if(st_ip -> ip_p != IPPROTO_TCP)        /* Ethernet이 아닐 경우 */
-        {
-            printf("Level 3 :: Capturing the packet from the specific IP address is on the \"TCP\" only.\n");
 
-            return (char *)get_packet;
+    if((ip_port_info -> option & 0x01) == 0x01) /* TCP 모드인지 검사 */
+    {
+        /* TCP인지 검사 */
+        if(ip_port_info -> ip_address != NULL)
+        {
+            if(st_ip -> ip_p != IPPROTO_TCP)        /* Ethernet이 아닐 경우 */
+            {
+                printf("Level 3 :: Capturing the packet from the specific IP address is on the \"TCP\" only.\n");
+
+                return (char *)get_packet;
+            }
         }
     }
 
