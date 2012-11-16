@@ -4,7 +4,8 @@ OBJECTS = network.o \
 	basement.o \
 	level_1.o \
 	level_2.o \
-	level_3.o
+	level_3.o \
+	print_result.o \
 
 all: BEGIN $(OBJECTS)
 	@$(CC) -o network $(OBJECTS) -lpcap
@@ -33,6 +34,9 @@ level_2.o : level_2.c
 
 level_3.o : level_3.c
 	@$(CC) -c level_3.c
+
+print_result.o : print_result.c
+	@$(CC) -c print_result.c
 
 clean :
 	@rm -rf $(OBJECTS)

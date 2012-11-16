@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     data_info.nicdev = dev_open(argv[1]);
     function = get_packet;
     
-    /* 기능 시작 */
+    /* 검출부 시작 */
     while(1)
     {
         if(function == NULL)
@@ -22,7 +22,10 @@ int main(int argc, char *argv[])
         }
         function = (*function)(&data_info);
     }
-
+    
+    /* 출력부 시작 */
+    (*print_1_network_connection)(&data_info);
+    
     pcap_close(data_info.nicdev);
     
     return 0;    

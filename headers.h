@@ -18,4 +18,6 @@
 #include "level_2.h"
 #include "level_3.h"
 
+#include "print_result.h"
+
 #endif  // __HEADER_H__

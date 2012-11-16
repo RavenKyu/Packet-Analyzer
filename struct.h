@@ -12,7 +12,10 @@ typedef struct
     const unsigned char *uc_data;
 
     unsigned char option;                /* 옵션 */
-    
+
+    /* 출력부 구조 */
+    char *level_1_network_connection;
+        
 } DATA_INFO;
 
 #endif  // __STRUCT_H__

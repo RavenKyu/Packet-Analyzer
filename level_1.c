@@ -10,64 +10,56 @@ void *level_1_data_link(DATA_INFO *data_info)
     {
         if(data_info -> datalink != 1)        /* Ethernet이 아닐 경우 */
         {
-            printf("Level 1 :: Capturing the packet from the specific IP address is on the \"Ethernet\" only.\n");
-
-            return (char *)get_packet;
+            return (char *)get_packet; /* 패킷을 다시 받으러 간다. */
         }
     }
 
-    if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
-    {
-        /* 랜카드 종류를 출력한다. */
-        printf("--------[ Level 1 : Network Connection ]---------------------------------------\n");
-    }
-    
-    printf("Network Connection          : ");
+    /* Datalink를 검출 */
     switch(data_info -> datalink)
     {
     case 0:
-        printf("no link-layer encapsulation\n");
+        data_info -> level_1_network_connection = "no link-layer encapsulation\n";
         break;
 
     case 1:
-        printf("Ethernet (10Mb)\n");
+        data_info -> level_1_network_connection = "Ethernet (10Mb)\n";
         st_Ether = (struct ether_header *)data_info -> uc_data;
         break;
 
     case 2:
-        printf("Experimental Ethernet (3Mb)\n");
+        data_info -> level_1_network_connection = "Experimental Ethernet (3Mb)\n";
         break;
 
     case 3:
-        printf("Amateur Radio AX.25\n");
+        data_info -> level_1_network_connection = "Amateur Radio AX.25\n";
         break;
 
     case 4:
-        printf("Proteon ProNET Token Ring\n");
+        data_info -> level_1_network_connection = "Proteon ProNET Token Ring\n";
         break;
 
     case 5:
-        printf("Chaos\n");
+        data_info -> level_1_network_connection = "Chaos\n";
         break;
 
     case 6:
-        printf("IEEE 802 Networks\n");
+        data_info -> level_1_network_connection = "IEEE 802 Networks\n";
         break;
 
     case 7:
-        printf("ARCNET\n");
+        data_info -> level_1_network_connection = "ARCNET\n";
         break;
 
     case 8:
-        printf("Serial Line IP\n");
+        data_info -> level_1_network_connection = "Serial Line IP\n";
         break;
 
     case 9:
-        printf("Point-to-point Protocol\n");
+        data_info -> level_1_network_connection = "Point-to-point Protocol\n";
         break;
 
     case 10:
-        printf("FDDI\n");
+        data_info -> level_1_network_connection = "FDDI\n";
         break;
             
     }
