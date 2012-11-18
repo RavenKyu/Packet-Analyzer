@@ -28,10 +28,15 @@ void *level_2_IP(DATA_INFO *ip_port_info)
         /* TCP인지 검사 */
         if(ip_port_info -> ip_address != NULL)
         {
-            if(st_ip -> ip_p != IPPROTO_TCP)        /* Ethernet이 아닐 경우 */
+            if(st_ip -> ip_p != IPPROTO_TCP)        /* TCP가 아닐 경우 */
             {
                 return (char *)get_packet;
             }
+            else if(st_ip -> ip_p == IPPROTO_TCP)
+            {
+                ip_port_info -> option = ip_port_info -> option | (0 << 2);
+            }
+
         }
     }
 
@@ -43,6 +48,10 @@ void *level_2_IP(DATA_INFO *ip_port_info)
             if(st_ip -> ip_p != IPPROTO_UDP)        /* Ethernet이 아닐 경우 */
             {
                 return (char *)get_packet;
+            }
+            else if(st_ip -> ip_p == IPPROTO_UDP)
+            {
+                ip_port_info -> option = ip_port_info -> option | (0 << 1);
             }
         }
     }

@@ -89,10 +89,7 @@ void *get_packet(DATA_INFO *data_info)
     data_info -> uc_data = pcap_next(data_info -> nicdev, &info); /* 패킷을 받아서 해당 구조체 변수에 저장 */
     data_info -> datalink = pcap_datalink(data_info -> nicdev);
 
-    if((data_info -> option & 0x04) != 0x04)
-    {
-        hex_viewer((unsigned char *)data_info -> uc_data, 10); /* 헥사뷰로 출력 */
-    }
+
     
     return (char *)level_1_data_link;
 }

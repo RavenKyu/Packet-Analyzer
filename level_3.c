@@ -6,11 +6,11 @@ void *level_3_tcp(DATA_INFO *data_info)
 
     tcp_header = (struct tcphdr *)(data_info -> uc_data + 34);
 
-    printf("Source Port                 : %d\n", ntohs(tcp_header -> source));
-    printf("Destination Port            : %d\n", ntohs(tcp_header -> dest));
-    printf("Seq                         : %d\n", ntohs(tcp_header -> seq));
-    printf("Ack                         : %d\n", ntohs(tcp_header -> ack_seq));
-    putchar('\n');
+    data_info -> source = tcp_header -> source;
+    data_info -> dest = tcp_header -> dest; /* Destination Port */
+    data_info -> seq = tcp_header -> seq; /* Seq */
+    data_info -> ack_seq = tcp_header -> ack_seq; /* Ack */
+
     return 0;
 }
 
@@ -20,10 +20,10 @@ void *level_3_udp(DATA_INFO *data_info)
 
     udp_header = (struct udphdr *)(data_info -> uc_data + 34);
 
-    printf("Source Port : %d\n", ntohs(udp_header -> source));
-    printf("Destination Port : %d\n", ntohs(udp_header -> dest));
-    printf("Len : %d\n", ntohs(udp_header -> len));
-    printf("Check : %d\n", ntohs(udp_header -> check));
+    data_info -> source = udp_header -> source;
+    data_info -> dest = udp_header -> dest; /* Destination Port */
+    data_info -> len = udp_header -> len; /* len */
+    data_info -> check = udp_header -> check; /* check */
     
     return 0;
 }

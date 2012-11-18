@@ -30,6 +30,15 @@ typedef struct
 
     char *level_3_ipproto;
     struct in_addr ip_src, ip_dst;	/* source and dest address */
+
+    u_int16_t source;
+    u_int16_t dest;
+    
+    u_int32_t seq;
+    u_int32_t ack_seq;
+    
+    u_int16_t len;
+    u_int16_t check;
     
 } DATA_INFO;
 

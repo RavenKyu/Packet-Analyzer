@@ -3,7 +3,12 @@
 void *print_1_network_connection(DATA_INFO *data_info)
 {
     int i;
-    
+
+    if((data_info -> option & 0x04) != 0x04)
+    {
+        hex_viewer((unsigned char *)data_info -> uc_data, 10); /* 헥사뷰로 출력 */
+    }
+        
     if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
     {
         /* 랜카드 종류를 출력한다. */
@@ -83,6 +88,26 @@ void *print_1_network_connection(DATA_INFO *data_info)
 
     printf("IP Address                  : [%s] -> ", inet_ntoa(data_info -> ip_src));
     printf("[%s]\n", inet_ntoa(data_info -> ip_dst));
+    
+
+    if((data_info -> option & 0x04) != 0x04) /* Summary 모드인지 검사 */
+    {
+        printf("Source Port                 : %d\n", ntohs(data_info -> source));
+        printf("Destination Port            : %d\n", ntohs(data_info -> dest));
+        
+        if((data_info -> option & 0x01) == 0x01) /* TCP모드 인지 검사 */
+        {
+            printf("Seq                         : %d\n", ntohs(data_info -> seq));
+            printf("Ack                         : %d\n", ntohs(data_info -> ack_seq));
+            putchar('\n');
+        }
+        else if((data_info -> option & 0x02) == 0x02) /* UDP모드 인지 검사 */
+        {
+            printf("Len : %d\n", ntohs(data_info -> len));
+            printf("Check : %d\n", ntohs(data_info -> check));
+        }
+    }
+    putchar('\n');
     
     return;
 }

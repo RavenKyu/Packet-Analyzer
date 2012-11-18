@@ -85,8 +85,6 @@ void *level_1_data_link(DATA_INFO *data_info)
     {
         if(ntohs(st_Ether -> ether_type) != ETHERTYPE_IP)        /* Ethernet이 아닐 경우 */
         {
-            printf("Level 2 :: Capturing the packet from the specific IP address is on the \"IP\" only.\n");
-            
             return (char *)get_packet;
         }
     }
